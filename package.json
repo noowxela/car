@@ -17,7 +17,7 @@
     "url": "https://github.com/noowxela/car/issues"
   },
   "scripts": {
-    "deploy": "gh-pages -d ../car/dist"
+    "deploy": "gh-pages -d ../car"
   },
   "dependencies": {
     "gh-pages": "^6.0.0",
