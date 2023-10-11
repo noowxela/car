@@ -1,5 +1,26 @@
 {
+  "name": "carGo",
+  "homepage": "https://noowxela.github.io/car",
+  "version": "0.0.1",
+  "description": "A Three js car",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/noowxela/car.git"
+  },
+  "keywords": [
+    "threejs",
+    "car"
+  ],
+  "author": "Alex Woon",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/noowxela/car/issues"
+  },
+  "scripts": {
+    "deploy": "gh-pages -d ../car/dist"
+  },
   "dependencies": {
+    "gh-pages": "^6.0.0",
     "three": "^0.157.0"
   },
   "devDependencies": {
