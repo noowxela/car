@@ -168,7 +168,7 @@ function init() {
 
   // model
   new GLTFLoader()
-    .load('models/gltf/mer55.glb', function(gltf) {
+    .load('https://noowxela.github.io/car/models/gltf/mer55.glb', function(gltf) {
 
       carModel = gltf.scene.children[0];
 
