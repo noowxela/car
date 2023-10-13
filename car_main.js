@@ -166,15 +166,20 @@ function init() {
   setupGui();
 
 
-  const loader = new GLTFLoader();
+  // const loader = new GLTFLoader();
 
-  const url = "https://github.com/noowxela/car/raw/master/models/gltf/mer55.glb";
-  // const url = "https://noowxela.github.io/car/models/gltf/mer55.glb";
+  // const url = "https://github.com/noowxela/car/raw/master/models/gltf/mer55.glb";
+  // const url = "https://noowxela.github.io/car/models/mer55.glb";
+  // const url = "https://github.com/noowxela/car/blob/master/models/mer55.glb";
+  // const url = "https://raw.githubusercontent.com/noowxela/car/master/models/mer55.glb";
+  // const url = "https://drive.google.com/uc?export=download&id=1QUZjqiFhgMM7SQUdiMf8HMTAyo-zxVQO";
   // const url = "https://github.com/noowxela/noowxela.github.io/car/master/models/gltf/mer55.glb";
   // const url = "models/gltf/mer55.glb";
 
   // model
-  loader.load(url, function(gltf) {
+  // loader.load(url, function(gltf) {
+  const loader = new GLTFLoader().setPath('models/');
+  loader.load('mer55.glb', function(gltf) {
 
     carModel = gltf.scene.children[0];
 
