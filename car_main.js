@@ -7,7 +7,6 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import Stats from 'three/addons/libs/stats.module.js';
 
-
 var camera, cameraControls;
 var scene, renderer;
 
@@ -166,341 +165,346 @@ function init() {
   initMaterials();
   setupGui();
 
+
+  const loader = new GLTFLoader();
+
+  const url = "https://github.com/noowxela/car/raw/master/models/gltf/mer55.glb";
+  // const url = "models/gltf/mer55.glb";
+
   // model
-  new GLTFLoader()
-    .load('https://noowxela.github.io/car/models/gltf/mer55.glb', function(gltf) {
-
-      carModel = gltf.scene.children[0];
-
-      carModel.traverse(function(child) {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          child.material.envMap = envMap_01;
-        }
-      });
-      console.log("carModel : ", carModel)
-      console.log("carModel.position : ", carModel.position)
-      scene.add(carModel);
-
-
-      carParts.body.push(
-        carModel.getObjectByName('body_01'),
-        carModel.getObjectByName('body_02'),
-        carModel.getObjectByName('body_03'),
-        carModel.getObjectByName('body_04'),
-        carModel.getObjectByName('body_05'),
-        carModel.getObjectByName('body_06'),
-        carModel.getObjectByName('body_07'),
-        carModel.getObjectByName('body_08'),
-        carModel.getObjectByName('body_09'),
-        carModel.getObjectByName('body_10'),
-        carModel.getObjectByName('body_11'),
-        carModel.getObjectByName('body_12'),
-        carModel.getObjectByName('body_13'),
-        carModel.getObjectByName('body_14'),
-        carModel.getObjectByName('Exterior_side_hander'),
-        carModel.getObjectByName('Exterior_back_01'),
-        carModel.getObjectByName('Exterior_side_03'),
-        carModel.getObjectByName('Exterior_front_03'),
-
-      );
-
-      carParts.side_logo.push(
-
-        carModel.getObjectByName('Exterior_side_logo'),
-
-
-      );
-
-      carParts.side_nameplate_word.push(
-
-        carModel.getObjectByName('nameplate_v8'),
-        carModel.getObjectByName('nameplate_BITURBO'),
-        carModel.getObjectByName('nameplate_boader'),
-        carModel.getObjectByName('nameplate_4matic'),
-
-        carModel.getObjectByName('nameplate_v009'),
-        carModel.getObjectByName('nameplate_BITURBO001'),
-        carModel.getObjectByName('nameplate_4matic001'),
-        carModel.getObjectByName('nameplate_boader001'),
-
-
-      );
-
-      carParts.side_nameplate_plus.push(
-
-        carModel.getObjectByName('nameplate_+001'),
-        carModel.getObjectByName('nameplate_+'),
-
-
-      );
-
-      carParts.side_nameplate_insise.push(
-
-        carModel.getObjectByName('nameplate_inside'),
-        carModel.getObjectByName('nameplate_inside001'),
-
-
-      );
-
-      carParts.black_part.push(
-        carModel.getObjectByName('Exterior_front_01'),
-        carModel.getObjectByName('Exterior_front_02'),
-        carModel.getObjectByName('Exterior_front_04'),
-        carModel.getObjectByName('Exterior_front_06'),
-        carModel.getObjectByName('Exterior_front_09'),
-        carModel.getObjectByName('Exterior_front_11'),
-        carModel.getObjectByName('Exterior_front_13'),
-        carModel.getObjectByName('Exterior_front_14'),
-        carModel.getObjectByName('Exterior_front_16'),
-        carModel.getObjectByName('Exterior_front_17'),
-        carModel.getObjectByName('Exterior_front_18'),
-        carModel.getObjectByName('Exterior_front_19'),
-        carModel.getObjectByName('Exterior_front_20'),
-        carModel.getObjectByName('Exterior_front_21'),
-        carModel.getObjectByName('Exterior_front_22'),
-        carModel.getObjectByName('Exterior_front_27'),
-        carModel.getObjectByName('Exterior_front_28'),
-        carModel.getObjectByName('Exterior_front_logo03'),
-
-        carModel.getObjectByName('Exterior_back_lower_01'),
-        carModel.getObjectByName('Exterior_back_lower_02'),
-        carModel.getObjectByName('Exterior_back_lower_03'),
-        carModel.getObjectByName('Exterior_back_lower_04'),
-        carModel.getObjectByName('Exterior_back_lower_05'),
-        carModel.getObjectByName('Exterior_back_lower_06'),
-        carModel.getObjectByName('Exterior_plate_02'),
-        carModel.getObjectByName('Exterior_plate_03'),
-        carModel.getObjectByName('Exterior_plate_01'),
-
-        carModel.getObjectByName('Exterior_side_01'),
-
-
-        // near the bulb got a thing  ## unkown usessage but real car got it
-
-        // shoule de gray be lazy liao
-        carModel.getObjectByName('Exterior_side_signal'),
-
-        // shoulde be check agian
-        carModel.getObjectByName('Exterior_back_red_011'),
-        carModel.getObjectByName('Exterior_back_red_021'),
-        carModel.getObjectByName('Exterior_back_red_031'),
-        carModel.getObjectByName('Exterior_back_red_041'),
-
-      );
-
-
-
-      carParts.front_bulb_inside_black.push(
-        carModel.getObjectByName('Exterior_front_bulb_004'),
-        carModel.getObjectByName('Exterior_front_bulb_002'),
-
-      )
-
-      carParts.interior.push(
-        carModel.getObjectByName('Interior_01'),
-        carModel.getObjectByName('Interior_02'),
-        carModel.getObjectByName('Interior_03'),
-        carModel.getObjectByName('Interior_04'),
-        carModel.getObjectByName('Interior_05'),
-        carModel.getObjectByName('Interior_06'),
-        carModel.getObjectByName('Interior_07'),
-        carModel.getObjectByName('Interior_08'),
-        carModel.getObjectByName('Interior_09'),
-        carModel.getObjectByName('steering_wheel'),
-        carModel.getObjectByName('Interior_11'),
-        carModel.getObjectByName('Interior_12'),
-        carModel.getObjectByName('Interior_13'),
-        // carModel.getObjectByName( '' ),
-
-        // carModel.getObjectByName( 'Line001' ),
-        // carModel.getObjectByName( 'Line002' ),
-
-
-      );
-      // carParts.interior_handle.push(
-      // 	carModel.getObjectByName( 'sadlife_button' ),
-      // 	carModel.getObjectByName( 'sadlife_buttei' ),
-      // 	carModel.getObjectByName( 'sadlife__line01' ),
-      // 	carModel.getObjectByName( 'sadcircle' ),
-      // 	carModel.getObjectByName( 'sadllifeset' ),
-      // 	carModel.getObjectByName( '' ),
-      // 	carModel.getObjectByName( 'sadcircle001' ),
-      // 	carModel.getObjectByName( 'sadlife__line002' ),
-
-      // 	carModel.getObjectByName( 'sadlife_button001' ),
-      // 	carModel.getObjectByName( 'sadllifeset001' ),
-      // 	carModel.getObjectByName( '' ),
-      // 	carModel.getObjectByName( '' ),
-      // 	carModel.getObjectByName( '' ),
-
-
-      // );
-
-
-      carParts.side.push(
-        carModel.getObjectByName('Exterior_side_07'),
-        carModel.getObjectByName('Exterior_side_02'),
-        carModel.getObjectByName('Exterior_side_04'),
-        carModel.getObjectByName('Exterior_side_05'),
-        carModel.getObjectByName('Exterior_side_06'),
-
-      );
-
-
-
-
-      carParts.sliver.push(
-        carModel.getObjectByName('Exterior_front_logo01'),
-        carModel.getObjectByName('Exterior_front_logo02'),
-        carModel.getObjectByName('Exterior_back_logo_01'),
-        carModel.getObjectByName('Exterior_back_logo_02'),
-        carModel.getObjectByName('tire_logo_01'),
-        carModel.getObjectByName('tire_logo_02'),
-        carModel.getObjectByName('tire_logo_03'),
-        carModel.getObjectByName('tire_logo_04'),
-        carModel.getObjectByName('Exterior_front_silver_05'),
-        // carModel.getObjectByName( 'tire_brakedisk_01' ),
-        // carModel.getObjectByName( 'tire_brakedisk_02' ),
-        // carModel.getObjectByName( 'tire_brakedisk_03' ),
-        // carModel.getObjectByName( 'tire_brakedisk_04' ),
-        // carModel.getObjectByName( 'tire_brakedisk_05' ),
-        // carModel.getObjectByName( 'tire_brakedisk_06' ),
-        // carModel.getObjectByName( 'tire_brakedisk_07' ),
-        // carModel.getObjectByName( 'tire_brakedisk_08' ),
-      );
-
-      carParts.mirror.push(
-        carModel.getObjectByName('Exterior_side_mirror'),
-
-      );
-
-
-      carParts.glass.push(
-        carModel.getObjectByName('Exterior_glass_01'),
-        carModel.getObjectByName('Exterior_glass_02'),
-        carModel.getObjectByName('Exterior_glass_03'),
-      );
-
-      carParts.front_glass.push(
-        carModel.getObjectByName('Exterior_front_glass_01'),
-        carModel.getObjectByName('Exterior_front_glass_02'),
-
-        // cincaila , need change de
-        carModel.getObjectByName('Exterior_side_glass_01'),
-
-      );
-      carParts.front_bulb.push(
-
-        carModel.getObjectByName('Exterior_back_glass_04'),
-
-        // ##need eject de,but lazy liao
-
-      );
-      carParts.front_bulb_gray.push(
-        carModel.getObjectByName('Exterior_front_bulb_00'),
-        carModel.getObjectByName('Exterior_front_bulb_001'),
-
-
-        // ##need eject de,but lazy liao
-
-      );
-      carParts.bulub_black.push(
-        carModel.getObjectByName('Exterior_front_bulb_005'),
-        carModel.getObjectByName('Exterior_front_bulb_006'),
-        carModel.getObjectByName('Exterior_front_bulb_007'),
-
-      );
-
-      carParts.back_glass.push(
-        carModel.getObjectByName('Exterior_back_glass_01'),
-
-      );
-
-      carParts.signal_red.push(
-        carModel.getObjectByName('Exterior_back_red_02'),
-        carModel.getObjectByName('Exterior_back_red_011'),
-        carModel.getObjectByName('Exterior_back_red_021'),
-
-      );
-      carParts.signal_white_base.push(
-        carModel.getObjectByName('Exterior_front_bulb_003'),
-
-        carModel.getObjectByName('Exterior_back_red_01'),
-        carModel.getObjectByName('Exterior_back_04'),
-      );
-
-
-
-      carParts.tire.push(
-        carModel.getObjectByName('tire_01'),
-        carModel.getObjectByName('tire_02'),
-        carModel.getObjectByName('tire_03'),
-        carModel.getObjectByName('tire_04'),
-
-      );
-
-      carParts.rims.push(
-        carModel.getObjectByName('tire_rims_01'),
-        carModel.getObjectByName('tire_rims_02'),
-        carModel.getObjectByName('tire_rims_03'),
-        carModel.getObjectByName('tire_rims_04'),
-        carModel.getObjectByName('tire_rims_c_01'),
-        carModel.getObjectByName('tire_rims_c_02'),
-        carModel.getObjectByName('tire_rims_c_03'),
-        carModel.getObjectByName('tire_rims_c_04'),
-        carModel.getObjectByName('silver_01'),
-        carModel.getObjectByName('silver_02'),
-        carModel.getObjectByName('silver_03'),
-        carModel.getObjectByName('silver_04'),
-      );
-
-      carParts.cartire.push(
-        carModel.getObjectByName('wheel_fl'),
-        carModel.getObjectByName('wheel_fr'),
-        carModel.getObjectByName('wheel_rl'),
-        carModel.getObjectByName('wheel_rr'),
-
-      );
-
-      carParts.etc.push(
-        carModel.getObjectByName('black_m_18'),
-        carModel.getObjectByName('black_m_19'),
-        carModel.getObjectByName('black_m_30'),
-        carModel.getObjectByName('black_m_20'),
-        carModel.getObjectByName('black_m_21'),
-        carModel.getObjectByName('black_m_29'),
-        carModel.getObjectByName('black_m_05'),
-        carModel.getObjectByName('black_m_06'),
-        carModel.getObjectByName('black_m_09'),
-        carModel.getObjectByName('black_m_04'),
-        carModel.getObjectByName('black_m_07'),
-        carModel.getObjectByName('black_m_10'),
-        carModel.getObjectByName('tire_brakedisk_01'),
-        carModel.getObjectByName('tire_brakedisk_02'),
-        carModel.getObjectByName('tire_brakedisk_03'),
-        carModel.getObjectByName('tire_brakedisk_04'),
-        carModel.getObjectByName('tire_brakedisk_05'),
-        carModel.getObjectByName('tire_brakedisk_06'),
-        carModel.getObjectByName('tire_brakedisk_07'),
-        carModel.getObjectByName('tire_brakedisk_08'),
-
-        carModel.getObjectByName('tire_caliper_01'),
-        carModel.getObjectByName('tire_caliper_02'),
-        carModel.getObjectByName('tire_caliper_03'),
-        carModel.getObjectByName('tire_caliper_04'),
-      );
-
-
-      // carParts.floor.push(
-      //   carModel.getObjectByName('StuioBG'),
-
-      // );
-
-      updateMaterials();
-
+  loader.load(url, function(gltf) {
+
+    carModel = gltf.scene.children[0];
+
+    carModel.traverse(function(child) {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        child.material.envMap = envMap_01;
+      }
     });
+    console.log("carModel : ", carModel)
+    console.log("carModel.position : ", carModel.position)
+    scene.add(carModel);
+
+
+    carParts.body.push(
+      carModel.getObjectByName('body_01'),
+      carModel.getObjectByName('body_02'),
+      carModel.getObjectByName('body_03'),
+      carModel.getObjectByName('body_04'),
+      carModel.getObjectByName('body_05'),
+      carModel.getObjectByName('body_06'),
+      carModel.getObjectByName('body_07'),
+      carModel.getObjectByName('body_08'),
+      carModel.getObjectByName('body_09'),
+      carModel.getObjectByName('body_10'),
+      carModel.getObjectByName('body_11'),
+      carModel.getObjectByName('body_12'),
+      carModel.getObjectByName('body_13'),
+      carModel.getObjectByName('body_14'),
+      carModel.getObjectByName('Exterior_side_hander'),
+      carModel.getObjectByName('Exterior_back_01'),
+      carModel.getObjectByName('Exterior_side_03'),
+      carModel.getObjectByName('Exterior_front_03'),
+
+    );
+
+    carParts.side_logo.push(
+
+      carModel.getObjectByName('Exterior_side_logo'),
+
+
+    );
+
+    carParts.side_nameplate_word.push(
+
+      carModel.getObjectByName('nameplate_v8'),
+      carModel.getObjectByName('nameplate_BITURBO'),
+      carModel.getObjectByName('nameplate_boader'),
+      carModel.getObjectByName('nameplate_4matic'),
+
+      carModel.getObjectByName('nameplate_v009'),
+      carModel.getObjectByName('nameplate_BITURBO001'),
+      carModel.getObjectByName('nameplate_4matic001'),
+      carModel.getObjectByName('nameplate_boader001'),
+
+
+    );
+
+    carParts.side_nameplate_plus.push(
+
+      carModel.getObjectByName('nameplate_+001'),
+      carModel.getObjectByName('nameplate_+'),
+
+
+    );
+
+    carParts.side_nameplate_insise.push(
+
+      carModel.getObjectByName('nameplate_inside'),
+      carModel.getObjectByName('nameplate_inside001'),
+
+
+    );
+
+    carParts.black_part.push(
+      carModel.getObjectByName('Exterior_front_01'),
+      carModel.getObjectByName('Exterior_front_02'),
+      carModel.getObjectByName('Exterior_front_04'),
+      carModel.getObjectByName('Exterior_front_06'),
+      carModel.getObjectByName('Exterior_front_09'),
+      carModel.getObjectByName('Exterior_front_11'),
+      carModel.getObjectByName('Exterior_front_13'),
+      carModel.getObjectByName('Exterior_front_14'),
+      carModel.getObjectByName('Exterior_front_16'),
+      carModel.getObjectByName('Exterior_front_17'),
+      carModel.getObjectByName('Exterior_front_18'),
+      carModel.getObjectByName('Exterior_front_19'),
+      carModel.getObjectByName('Exterior_front_20'),
+      carModel.getObjectByName('Exterior_front_21'),
+      carModel.getObjectByName('Exterior_front_22'),
+      carModel.getObjectByName('Exterior_front_27'),
+      carModel.getObjectByName('Exterior_front_28'),
+      carModel.getObjectByName('Exterior_front_logo03'),
+
+      carModel.getObjectByName('Exterior_back_lower_01'),
+      carModel.getObjectByName('Exterior_back_lower_02'),
+      carModel.getObjectByName('Exterior_back_lower_03'),
+      carModel.getObjectByName('Exterior_back_lower_04'),
+      carModel.getObjectByName('Exterior_back_lower_05'),
+      carModel.getObjectByName('Exterior_back_lower_06'),
+      carModel.getObjectByName('Exterior_plate_02'),
+      carModel.getObjectByName('Exterior_plate_03'),
+      carModel.getObjectByName('Exterior_plate_01'),
+
+      carModel.getObjectByName('Exterior_side_01'),
+
+
+      // near the bulb got a thing  ## unkown usessage but real car got it
+
+      // shoule de gray be lazy liao
+      carModel.getObjectByName('Exterior_side_signal'),
+
+      // shoulde be check agian
+      carModel.getObjectByName('Exterior_back_red_011'),
+      carModel.getObjectByName('Exterior_back_red_021'),
+      carModel.getObjectByName('Exterior_back_red_031'),
+      carModel.getObjectByName('Exterior_back_red_041'),
+
+    );
+
+
+
+    carParts.front_bulb_inside_black.push(
+      carModel.getObjectByName('Exterior_front_bulb_004'),
+      carModel.getObjectByName('Exterior_front_bulb_002'),
+
+    )
+
+    carParts.interior.push(
+      carModel.getObjectByName('Interior_01'),
+      carModel.getObjectByName('Interior_02'),
+      carModel.getObjectByName('Interior_03'),
+      carModel.getObjectByName('Interior_04'),
+      carModel.getObjectByName('Interior_05'),
+      carModel.getObjectByName('Interior_06'),
+      carModel.getObjectByName('Interior_07'),
+      carModel.getObjectByName('Interior_08'),
+      carModel.getObjectByName('Interior_09'),
+      carModel.getObjectByName('steering_wheel'),
+      carModel.getObjectByName('Interior_11'),
+      carModel.getObjectByName('Interior_12'),
+      carModel.getObjectByName('Interior_13'),
+      // carModel.getObjectByName( '' ),
+
+      // carModel.getObjectByName( 'Line001' ),
+      // carModel.getObjectByName( 'Line002' ),
+
+
+    );
+    // carParts.interior_handle.push(
+    // 	carModel.getObjectByName( 'sadlife_button' ),
+    // 	carModel.getObjectByName( 'sadlife_buttei' ),
+    // 	carModel.getObjectByName( 'sadlife__line01' ),
+    // 	carModel.getObjectByName( 'sadcircle' ),
+    // 	carModel.getObjectByName( 'sadllifeset' ),
+    // 	carModel.getObjectByName( '' ),
+    // 	carModel.getObjectByName( 'sadcircle001' ),
+    // 	carModel.getObjectByName( 'sadlife__line002' ),
+
+    // 	carModel.getObjectByName( 'sadlife_button001' ),
+    // 	carModel.getObjectByName( 'sadllifeset001' ),
+    // 	carModel.getObjectByName( '' ),
+    // 	carModel.getObjectByName( '' ),
+    // 	carModel.getObjectByName( '' ),
+
+
+    // );
+
+
+    carParts.side.push(
+      carModel.getObjectByName('Exterior_side_07'),
+      carModel.getObjectByName('Exterior_side_02'),
+      carModel.getObjectByName('Exterior_side_04'),
+      carModel.getObjectByName('Exterior_side_05'),
+      carModel.getObjectByName('Exterior_side_06'),
+
+    );
+
+
+
+
+    carParts.sliver.push(
+      carModel.getObjectByName('Exterior_front_logo01'),
+      carModel.getObjectByName('Exterior_front_logo02'),
+      carModel.getObjectByName('Exterior_back_logo_01'),
+      carModel.getObjectByName('Exterior_back_logo_02'),
+      carModel.getObjectByName('tire_logo_01'),
+      carModel.getObjectByName('tire_logo_02'),
+      carModel.getObjectByName('tire_logo_03'),
+      carModel.getObjectByName('tire_logo_04'),
+      carModel.getObjectByName('Exterior_front_silver_05'),
+      // carModel.getObjectByName( 'tire_brakedisk_01' ),
+      // carModel.getObjectByName( 'tire_brakedisk_02' ),
+      // carModel.getObjectByName( 'tire_brakedisk_03' ),
+      // carModel.getObjectByName( 'tire_brakedisk_04' ),
+      // carModel.getObjectByName( 'tire_brakedisk_05' ),
+      // carModel.getObjectByName( 'tire_brakedisk_06' ),
+      // carModel.getObjectByName( 'tire_brakedisk_07' ),
+      // carModel.getObjectByName( 'tire_brakedisk_08' ),
+    );
+
+    carParts.mirror.push(
+      carModel.getObjectByName('Exterior_side_mirror'),
+
+    );
+
+
+    carParts.glass.push(
+      carModel.getObjectByName('Exterior_glass_01'),
+      carModel.getObjectByName('Exterior_glass_02'),
+      carModel.getObjectByName('Exterior_glass_03'),
+    );
+
+    carParts.front_glass.push(
+      carModel.getObjectByName('Exterior_front_glass_01'),
+      carModel.getObjectByName('Exterior_front_glass_02'),
+
+      // cincaila , need change de
+      carModel.getObjectByName('Exterior_side_glass_01'),
+
+    );
+    carParts.front_bulb.push(
+
+      carModel.getObjectByName('Exterior_back_glass_04'),
+
+      // ##need eject de,but lazy liao
+
+    );
+    carParts.front_bulb_gray.push(
+      carModel.getObjectByName('Exterior_front_bulb_00'),
+      carModel.getObjectByName('Exterior_front_bulb_001'),
+
+
+      // ##need eject de,but lazy liao
+
+    );
+    carParts.bulub_black.push(
+      carModel.getObjectByName('Exterior_front_bulb_005'),
+      carModel.getObjectByName('Exterior_front_bulb_006'),
+      carModel.getObjectByName('Exterior_front_bulb_007'),
+
+    );
+
+    carParts.back_glass.push(
+      carModel.getObjectByName('Exterior_back_glass_01'),
+
+    );
+
+    carParts.signal_red.push(
+      carModel.getObjectByName('Exterior_back_red_02'),
+      carModel.getObjectByName('Exterior_back_red_011'),
+      carModel.getObjectByName('Exterior_back_red_021'),
+
+    );
+    carParts.signal_white_base.push(
+      carModel.getObjectByName('Exterior_front_bulb_003'),
+
+      carModel.getObjectByName('Exterior_back_red_01'),
+      carModel.getObjectByName('Exterior_back_04'),
+    );
+
+
+
+    carParts.tire.push(
+      carModel.getObjectByName('tire_01'),
+      carModel.getObjectByName('tire_02'),
+      carModel.getObjectByName('tire_03'),
+      carModel.getObjectByName('tire_04'),
+
+    );
+
+    carParts.rims.push(
+      carModel.getObjectByName('tire_rims_01'),
+      carModel.getObjectByName('tire_rims_02'),
+      carModel.getObjectByName('tire_rims_03'),
+      carModel.getObjectByName('tire_rims_04'),
+      carModel.getObjectByName('tire_rims_c_01'),
+      carModel.getObjectByName('tire_rims_c_02'),
+      carModel.getObjectByName('tire_rims_c_03'),
+      carModel.getObjectByName('tire_rims_c_04'),
+      carModel.getObjectByName('silver_01'),
+      carModel.getObjectByName('silver_02'),
+      carModel.getObjectByName('silver_03'),
+      carModel.getObjectByName('silver_04'),
+    );
+
+    carParts.cartire.push(
+      carModel.getObjectByName('wheel_fl'),
+      carModel.getObjectByName('wheel_fr'),
+      carModel.getObjectByName('wheel_rl'),
+      carModel.getObjectByName('wheel_rr'),
+
+    );
+
+    carParts.etc.push(
+      carModel.getObjectByName('black_m_18'),
+      carModel.getObjectByName('black_m_19'),
+      carModel.getObjectByName('black_m_30'),
+      carModel.getObjectByName('black_m_20'),
+      carModel.getObjectByName('black_m_21'),
+      carModel.getObjectByName('black_m_29'),
+      carModel.getObjectByName('black_m_05'),
+      carModel.getObjectByName('black_m_06'),
+      carModel.getObjectByName('black_m_09'),
+      carModel.getObjectByName('black_m_04'),
+      carModel.getObjectByName('black_m_07'),
+      carModel.getObjectByName('black_m_10'),
+      carModel.getObjectByName('tire_brakedisk_01'),
+      carModel.getObjectByName('tire_brakedisk_02'),
+      carModel.getObjectByName('tire_brakedisk_03'),
+      carModel.getObjectByName('tire_brakedisk_04'),
+      carModel.getObjectByName('tire_brakedisk_05'),
+      carModel.getObjectByName('tire_brakedisk_06'),
+      carModel.getObjectByName('tire_brakedisk_07'),
+      carModel.getObjectByName('tire_brakedisk_08'),
+
+      carModel.getObjectByName('tire_caliper_01'),
+      carModel.getObjectByName('tire_caliper_02'),
+      carModel.getObjectByName('tire_caliper_03'),
+      carModel.getObjectByName('tire_caliper_04'),
+    );
+
+
+    // carParts.floor.push(
+    //   carModel.getObjectByName('StuioBG'),
+
+    // );
+
+    updateMaterials();
+
+  });
 
   window.addEventListener('resize', onWindowResize);
 
