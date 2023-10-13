@@ -169,6 +169,8 @@ function init() {
   const loader = new GLTFLoader();
 
   const url = "https://github.com/noowxela/car/raw/master/models/gltf/mer55.glb";
+  // const url = "https://noowxela.github.io/car/models/gltf/mer55.glb";
+  // const url = "https://github.com/noowxela/noowxela.github.io/car/master/models/gltf/mer55.glb";
   // const url = "models/gltf/mer55.glb";
 
   // model
