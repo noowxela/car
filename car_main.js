@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
@@ -179,7 +180,14 @@ function init() {
   // model
   // loader.load(url, function(gltf) {
   const loader = new GLTFLoader().setPath('models/');
-  loader.load('mer55.glb', function(gltf) {
+    
+  // Optional: Provide a DRACOLoader instance to decode compressed mesh data
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+  loader.setDRACOLoader(dracoLoader);
+
+  loader.load('mer55_test1.gltf', function(gltf) {
+  // loader.load('mer55.glb', function(gltf) {
 
     carModel = gltf.scene.children[0];
 
