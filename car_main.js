@@ -134,8 +134,24 @@ function init() {
   initMaterials();
   setupGui();
 
+  const loadingManager = new THREE.LoadingManager();
+
+  const progressBar = document.getElementById('progress-bar');
+  const progressBarValue = document.getElementById('progress-bar-value');
+
+  loadingManager.onProgress = function(url, loaded, total) {
+    progressBar.value = (loaded / total) * 100;
+    progressBarValue.innerHTML = (loaded / total * 100).toFixed(2) + '%';
+  }
+
+  const progressBarContainer = document.querySelector('.progress-bar-container');
+
+  loadingManager.onLoad = function() {
+    progressBarContainer.style.display = 'none';
+  }
+
   // model
-  const loader = new GLTFLoader().setPath('models/');
+  const loader = new GLTFLoader(loadingManager).setPath('models/');
 
   // Optional: Provide a DRACOLoader instance to decode compressed mesh data
   const dracoLoader = new DRACOLoader();
