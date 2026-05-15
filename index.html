@@ -123,6 +123,110 @@
         #page-controls button:hover {
             background: rgba(255, 255, 255, 0.2);
         }
+
+        #page-controls .drive-hint {
+            font-size: 0.75rem;
+            opacity: 0.65;
+            cursor: default;
+        }
+
+        #page-controls .mode-switch {
+            display: flex;
+            gap: 0;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        #page-controls .mode-btn {
+            border: none;
+            border-radius: 0;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        #page-controls .mode-btn.active {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        #page-controls .mode-panel {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        #page-controls .mode-panel[hidden] {
+            display: none !important;
+        }
+
+        #compass {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 90;
+            width: 88px;
+            height: 88px;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        #compass[hidden] {
+            display: none !important;
+        }
+
+        #compass .compass-dial {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            background: rgba(0, 0, 0, 0.45);
+            box-sizing: border-box;
+        }
+
+        #compass .compass-dial span {
+            position: absolute;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            line-height: 1;
+        }
+
+        #compass .compass-n {
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #f0c8a0;
+        }
+
+        #compass .compass-s {
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #compass .compass-e {
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #compass .compass-w {
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #compass .compass-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            margin: -3px 0 0 -3px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+        }
     </style>
     <script type="importmap">
         { "imports": { "three": "https://unpkg.com/three@v0.157.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@v0.157.0/examples/jsm/" } }
@@ -143,6 +247,11 @@
     </div>
 
     <div id="page-controls">
+        <div class="mode-switch">
+            <button type="button" id="mode-inspect" class="mode-btn active">Inspect</button>
+            <button type="button" id="mode-drive" class="mode-btn">Drive</button>
+        </div>
+        <div id="inspect-controls" class="mode-panel">
         <div class="control-group">
             <label for="paint-preset">Paint preset</label>
             <select id="paint-preset" aria-label="Paint preset"></select>
@@ -152,6 +261,20 @@
             Rotate car
         </label>
         <button type="button" id="screenshot-btn">Screenshot</button>
+        </div>
+        <div id="drive-controls" class="mode-panel" hidden>
+            <span class="drive-hint">WASD / arrows to drive · scroll zoom · drag to orbit camera</span>
+            <button type="button" id="screenshot-btn-drive">Screenshot</button>
+        </div>
+    </div>
+    <div id="compass" hidden aria-hidden="true">
+        <div class="compass-dial">
+            <span class="compass-n">N</span>
+            <span class="compass-e">E</span>
+            <span class="compass-s">S</span>
+            <span class="compass-w">W</span>
+            <span class="compass-center"></span>
+        </div>
     </div>
     <script type="module" src="./car_main.js"></script>
 </body>

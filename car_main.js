@@ -7,6 +7,9 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import Stats from 'three/addons/libs/stats.module.js';
+import { CarDrive } from './carmove/carDrive.js';
+import { initDriveEnvironment, rebuildDriveGround, DRIVE_SCENE_COLORS } from './carmove/driveEnvironment.js';
+import { computeDriveMetrics } from './carmove/driveMetrics.js';
 
 var camera, cameraControls;
 var scene, renderer;
@@ -17,7 +20,13 @@ var matStdObjects = new THREE.MeshStandardMaterial({
   metalness: 0
 });
 
+const MODE = {
+  INSPECT: 'inspect',
+  DRIVE: 'drive',
+};
+
 var settings = {
+  'appMode': MODE.INSPECT,
   'cameraRotate': false,
   'envMap_01': false,
 
@@ -55,8 +64,40 @@ var settings = {
 var carModel, materialsLib;
 var envMap_01;
 var carEnvironment;
+var driveEnvironment;
+var carDrive;
+var guiPanel;
 
 const STUDIO_FLOOR_Y = -57;
+const DRIVE_CAMERA_BACK = 480;
+const DRIVE_CAMERA_UP = 200;
+const DRIVE_LOOK_AHEAD = 140;
+const DRIVE_ZOOM_MIN = 0.35;
+const DRIVE_ZOOM_MAX = 2.5;
+const DRIVE_CAMERA_PITCH_MIN = -0.12;
+const DRIVE_CAMERA_PITCH_MAX = 1.15;
+let driveCameraZoom = 1;
+let driveCameraZoomDefault = 1;
+let driveCameraYaw = 0;
+let driveCameraPitch = 0.4;
+let isDriveCameraDragging = false;
+let driveCameraLastPointerX = 0;
+let driveCameraLastPointerY = 0;
+const driveCameraFocus = new THREE.Vector3();
+const driveCameraFocusSmooth = new THREE.Vector3();
+const driveCameraDesired = new THREE.Vector3();
+const driveCameraOffset = new THREE.Vector3();
+const driveCameraLookAhead = new THREE.Vector3();
+const driveForwardXZ = new THREE.Vector3();
+const inspectState = {
+  carPosition: new THREE.Vector3(),
+  carRotation: new THREE.Euler(),
+  cameraPosition: new THREE.Vector3(-400, 300, 800),
+  cameraTarget: new THREE.Vector3(0, STUDIO_FLOOR_Y + 30, 0),
+};
+const driveLookAt = new THREE.Vector3();
+let compassEl;
+let compassDialEl;
 
 const PAINT_PRESETS = [
   { label: 'Rosely', value: 6 },
@@ -125,6 +166,8 @@ function init() {
   renderer.toneMappingExposure = 1;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.domElement.tabIndex = 0;
+  renderer.domElement.style.outline = 'none';
   container.appendChild(renderer.domElement);
 
   const environment = new RoomEnvironment(renderer);
@@ -141,6 +184,9 @@ function init() {
 
   carEnvironment = initCarEnvironment(scene);
   scene.add(carEnvironment);
+
+  driveEnvironment = initDriveEnvironment(STUDIO_FLOOR_Y, renderer);
+  scene.add(driveEnvironment);
 
   renderer.toneMappingExposure = 1.05;
 
@@ -163,6 +209,7 @@ function init() {
   initMaterials();
   setupGui();
   setupPageControls();
+  setupDriveCameraControls();
 
   const loadingManager = new THREE.LoadingManager();
 
@@ -205,6 +252,29 @@ function init() {
     carRotationAngle = carModel.rotation.y;
     scene.add(carModel);
 
+    const carBounds = new THREE.Box3().setFromObject(carModel);
+    const carBoundsCenter = new THREE.Vector3();
+    carBounds.getCenter(carBoundsCenter);
+    const carCenterOffset = carBoundsCenter.clone().sub(carModel.position);
+    const driveMetrics = computeDriveMetrics(carModel);
+
+    carDrive = new CarDrive(carModel, {
+      unitScale: driveMetrics.unitScale,
+      resetRadius: driveMetrics.resetRadius,
+      floorY: STUDIO_FLOOR_Y,
+      centerOffset: carCenterOffset,
+      modelYawOffset: Math.PI / 2,
+    });
+
+    rebuildDriveGround(driveEnvironment, carDrive.groundY, renderer, driveMetrics);
+
+    const camLen = driveMetrics.carLength;
+    const camScale = THREE.MathUtils.clamp(camLen / 380, 0.65, 1.8);
+    driveCameraZoomDefault = camScale;
+    driveCameraZoom = camScale;
+
+    saveInspectState();
+    setAppMode(MODE.INSPECT);
 
     carParts.body.push(
       carModel.getObjectByName('body_01'),
@@ -657,15 +727,243 @@ function onWindowResize() {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
 
+  if (driveEnvironment?.groundSystem) {
+    driveEnvironment.groundSystem.onWindowResize(window.innerHeight, renderer.getPixelRatio());
+  }
+
 }
 
 function animate() {
 
   requestAnimationFrame(animate);
 
-  cameraControls.update(); // required if damping enabled
+  if (settings.appMode === MODE.INSPECT) {
+    cameraControls.update();
+  }
 
   render();
+
+}
+
+function saveInspectState() {
+
+  if (!carModel) return;
+
+  inspectState.carPosition.copy(carModel.position);
+  inspectState.carRotation.copy(carModel.rotation);
+  inspectState.cameraPosition.copy(camera.position);
+  inspectState.cameraTarget.copy(cameraControls.target);
+
+}
+
+function restoreInspectState() {
+
+  if (!carModel) return;
+
+  carModel.position.copy(inspectState.carPosition);
+  carModel.rotation.copy(inspectState.carRotation);
+  carRotationAngle = carModel.rotation.y;
+  carModel.rotation.x = 0;
+  carModel.rotation.z = 0;
+
+  camera.position.copy(inspectState.cameraPosition);
+  cameraControls.target.copy(inspectState.cameraTarget);
+  cameraControls.update();
+
+}
+
+function resetDriveCameraOrbit() {
+
+  driveCameraPitch = Math.atan2(DRIVE_CAMERA_UP, DRIVE_CAMERA_BACK);
+  if (carModel) {
+    driveCameraYaw = carModel.rotation.y + Math.PI;
+  }
+
+}
+
+function placeDriveCamera(immediate) {
+
+  if (!carModel || !carDrive) return;
+
+  carDrive.getFocusPoint(driveCameraFocus);
+
+  if (immediate) {
+    driveCameraFocusSmooth.copy(driveCameraFocus);
+  } else {
+    driveCameraFocusSmooth.lerp(driveCameraFocus, 0.14);
+  }
+
+  const dist = DRIVE_CAMERA_BACK * driveCameraZoom;
+  const cosP = Math.cos(driveCameraPitch);
+  const sinP = Math.sin(driveCameraPitch);
+  const cosY = Math.cos(driveCameraYaw);
+  const sinY = Math.sin(driveCameraYaw);
+
+  driveCameraDesired.set(
+    driveCameraFocusSmooth.x + dist * cosP * sinY,
+    driveCameraFocusSmooth.y + dist * sinP,
+    driveCameraFocusSmooth.z + dist * cosP * cosY
+  );
+
+  if (immediate) {
+    camera.position.copy(driveCameraDesired);
+  } else {
+    camera.position.lerp(driveCameraDesired, 0.1);
+  }
+
+  driveCameraLookAhead.set(0, 0, DRIVE_LOOK_AHEAD * driveCameraZoom);
+  driveCameraLookAhead.applyQuaternion(carModel.quaternion);
+  driveLookAt.copy(driveCameraFocusSmooth).add(driveCameraLookAhead);
+  camera.lookAt(driveLookAt);
+
+}
+
+function updateDriveCamera() {
+
+  placeDriveCamera(false);
+
+}
+
+function setCarOpaqueForDrive(opaque) {
+
+  if (!carModel) return;
+
+  carModel.traverse((child) => {
+    if (!child.isMesh || !child.material) return;
+
+    const materials = Array.isArray(child.material) ? child.material : [child.material];
+
+    for (let i = 0; i < materials.length; i++) {
+      const mat = materials[i];
+      if (!mat) continue;
+
+      if (opaque) {
+        if (!mat.userData.driveBackup) {
+          mat.userData.driveBackup = {
+            opacity: mat.opacity,
+            transparent: mat.transparent,
+          };
+        }
+        mat.opacity = 1;
+        mat.transparent = false;
+        mat.depthWrite = true;
+      } else if (mat.userData.driveBackup) {
+        mat.opacity = mat.userData.driveBackup.opacity;
+        mat.transparent = mat.userData.driveBackup.transparent;
+        delete mat.userData.driveBackup;
+      }
+      mat.needsUpdate = true;
+    }
+  });
+
+}
+
+function updateCompass() {
+
+  if (!compassDialEl || settings.appMode !== MODE.DRIVE) return;
+
+  const dx = camera.position.x - driveCameraFocusSmooth.x;
+  const dz = camera.position.z - driveCameraFocusSmooth.z;
+  const az = Math.atan2(dx, dz);
+
+  compassDialEl.style.transform = `rotate(${az}rad)`;
+
+}
+
+function setCompassVisible(visible) {
+
+  if (!compassEl) return;
+  compassEl.hidden = !visible;
+  compassEl.setAttribute('aria-hidden', visible ? 'false' : 'true');
+
+}
+
+function applySceneForMode(mode) {
+
+  const isInspect = mode === MODE.INSPECT;
+
+  carEnvironment.visible = isInspect;
+  driveEnvironment.visible = !isInspect;
+  setCompassVisible(!isInspect);
+
+  if (isInspect) {
+    scene.background.setHex(0xd4c8b8);
+    scene.fog.color.setHex(0xd4c8b8);
+    scene.fog.near = 700;
+    scene.fog.far = 3000;
+    renderer.toneMappingExposure = 1.05;
+  } else {
+    scene.background.setHex(DRIVE_SCENE_COLORS.background);
+    scene.fog.color.setHex(DRIVE_SCENE_COLORS.fog);
+    scene.fog.near = DRIVE_SCENE_COLORS.fogNear;
+    scene.fog.far = DRIVE_SCENE_COLORS.fogFar;
+    renderer.toneMappingExposure = DRIVE_SCENE_COLORS.exposure;
+  }
+
+}
+
+function setAppMode(mode) {
+
+  if (settings.appMode === mode) return;
+
+  if (settings.appMode === MODE.INSPECT) {
+    saveInspectState();
+  }
+
+  settings.appMode = mode;
+  const isInspect = mode === MODE.INSPECT;
+
+  applySceneForMode(mode);
+  setCarOpaqueForDrive(!isInspect);
+
+  if (guiPanel) {
+    guiPanel.domElement.style.display = isInspect ? '' : 'none';
+  }
+
+  const inspectControls = document.getElementById('inspect-controls');
+  const driveControls = document.getElementById('drive-controls');
+  if (inspectControls) inspectControls.hidden = !isInspect;
+  if (driveControls) driveControls.hidden = isInspect;
+
+  cameraControls.enabled = isInspect;
+
+  if (carDrive) {
+    if (isInspect) {
+      carDrive.unbindKeys();
+      carDrive.reset();
+      restoreInspectState();
+      settings.cameraRotate = false;
+      const rotateInput = document.getElementById('camera-rotate');
+      if (rotateInput) rotateInput.checked = false;
+    } else {
+      settings.cameraRotate = false;
+      driveCameraZoom = driveCameraZoomDefault;
+      resetDriveCameraOrbit();
+      isDriveCameraDragging = false;
+      carDrive.reset();
+      carDrive.bindKeys();
+      renderer.domElement.focus();
+      const focusY = carDrive.groundY + 38;
+      driveCameraFocusSmooth.set(0, focusY, 0);
+      placeDriveCamera(true);
+      if (driveEnvironment?.groundSystem) {
+        driveEnvironment.groundSystem.wakeRipple();
+      }
+    }
+  }
+
+  updateModeButtons();
+
+}
+
+function updateModeButtons() {
+
+  const inspectBtn = document.getElementById('mode-inspect');
+  const driveBtn = document.getElementById('mode-drive');
+  if (!inspectBtn || !driveBtn) return;
+
+  inspectBtn.classList.toggle('active', settings.appMode === MODE.INSPECT);
+  driveBtn.classList.toggle('active', settings.appMode === MODE.DRIVE);
 
 }
 
@@ -673,9 +971,29 @@ function render() {
 
   const delta = clock.getDelta();
 
-  if (settings.cameraRotate && carModel !== undefined) {
-    carRotationAngle += delta * 0.5;
-    carModel.rotation.y = carRotationAngle;
+  if (settings.appMode === MODE.INSPECT) {
+
+    if (settings.cameraRotate && carModel !== undefined) {
+      carRotationAngle += delta * 0.5;
+      carModel.rotation.y = carRotationAngle;
+    }
+
+  } else if (settings.appMode === MODE.DRIVE && carDrive) {
+
+    carDrive.update(delta);
+    updateDriveCamera();
+    updateCompass();
+
+    if (driveEnvironment?.groundSystem) {
+      carDrive.getDriveForwardXZ(driveForwardXZ);
+      driveEnvironment.groundSystem.update(
+        carDrive.props,
+        carDrive.groundY,
+        driveForwardXZ,
+        carDrive.visualTreadmill
+      );
+    }
+
   }
 
   renderer.render(scene, camera);
@@ -1278,6 +1596,69 @@ function initMaterials() {
   }
 }
 
+function onDriveCameraWheel(event) {
+
+  if (settings.appMode !== MODE.DRIVE) return;
+
+  event.preventDefault();
+  driveCameraZoom = Math.max(
+    DRIVE_ZOOM_MIN,
+    Math.min(DRIVE_ZOOM_MAX, driveCameraZoom + event.deltaY * 0.0012)
+  );
+
+}
+
+function onDriveCameraPointerDown(event) {
+
+  if (settings.appMode !== MODE.DRIVE || event.button !== 0) return;
+
+  isDriveCameraDragging = true;
+  driveCameraLastPointerX = event.clientX;
+  driveCameraLastPointerY = event.clientY;
+  renderer.domElement.setPointerCapture(event.pointerId);
+
+}
+
+function onDriveCameraPointerMove(event) {
+
+  if (!isDriveCameraDragging || settings.appMode !== MODE.DRIVE) return;
+
+  const deltaX = event.clientX - driveCameraLastPointerX;
+  const deltaY = event.clientY - driveCameraLastPointerY;
+  driveCameraLastPointerX = event.clientX;
+  driveCameraLastPointerY = event.clientY;
+
+  driveCameraYaw -= deltaX * 0.005;
+  driveCameraPitch += deltaY * 0.005;
+  driveCameraPitch = Math.max(
+    DRIVE_CAMERA_PITCH_MIN,
+    Math.min(DRIVE_CAMERA_PITCH_MAX, driveCameraPitch)
+  );
+
+}
+
+function onDriveCameraPointerUp(event) {
+
+  if (!isDriveCameraDragging) return;
+
+  isDriveCameraDragging = false;
+  if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+    renderer.domElement.releasePointerCapture(event.pointerId);
+  }
+
+}
+
+function setupDriveCameraControls() {
+
+  const el = renderer.domElement;
+  el.addEventListener('wheel', onDriveCameraWheel, { passive: false });
+  el.addEventListener('pointerdown', onDriveCameraPointerDown);
+  el.addEventListener('pointermove', onDriveCameraPointerMove);
+  el.addEventListener('pointerup', onDriveCameraPointerUp);
+  el.addEventListener('pointercancel', onDriveCameraPointerUp);
+
+}
+
 function takeScreenshot() {
 
   if (!renderer) return;
@@ -1294,6 +1675,9 @@ function takeScreenshot() {
 }
 
 function setupPageControls() {
+
+  compassEl = document.getElementById('compass');
+  compassDialEl = compassEl?.querySelector('.compass-dial') ?? null;
 
   const paintPresetSelect = document.getElementById('paint-preset');
   if (paintPresetSelect) {
@@ -1323,11 +1707,32 @@ function setupPageControls() {
     screenshotBtn.addEventListener('click', takeScreenshot);
   }
 
+  const screenshotBtnDrive = document.getElementById('screenshot-btn-drive');
+  if (screenshotBtnDrive) {
+    screenshotBtnDrive.addEventListener('click', takeScreenshot);
+  }
+
+  const inspectBtn = document.getElementById('mode-inspect');
+  const driveBtn = document.getElementById('mode-drive');
+  if (inspectBtn) {
+    inspectBtn.addEventListener('click', function() {
+      setAppMode(MODE.INSPECT);
+    });
+  }
+  if (driveBtn) {
+    driveBtn.addEventListener('click', function() {
+      setAppMode(MODE.DRIVE);
+    });
+  }
+
+  updateModeButtons();
+
 }
 
 function setupGui() {
 
   var panel = new GUI();
+  guiPanel = panel;
 
   const folders = {
     'Body': carParts.body,
