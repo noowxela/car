@@ -108,6 +108,21 @@
         #page-controls .control-group label {
             cursor: default;
         }
+
+        #page-controls button {
+            font-family: Monospace, monospace;
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #page-controls button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
     </style>
     <script type="importmap">
         { "imports": { "three": "https://unpkg.com/three@v0.157.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@v0.157.0/examples/jsm/" } }
@@ -136,6 +151,7 @@
             <input type="checkbox" id="camera-rotate" />
             Rotate car
         </label>
+        <button type="button" id="screenshot-btn">Screenshot</button>
     </div>
     <script type="module" src="./car_main.js"></script>
 </body>

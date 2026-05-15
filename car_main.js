@@ -118,7 +118,7 @@ function init() {
   container.appendChild(stats.dom);
 
   // RENDERER
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1278,6 +1278,21 @@ function initMaterials() {
   }
 }
 
+function takeScreenshot() {
+
+  if (!renderer) return;
+
+  render();
+
+  const dataUrl = renderer.domElement.toDataURL('image/png');
+  const link = document.createElement('a');
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  link.download = `carGo-${stamp}.png`;
+  link.href = dataUrl;
+  link.click();
+
+}
+
 function setupPageControls() {
 
   const paintPresetSelect = document.getElementById('paint-preset');
@@ -1301,6 +1316,11 @@ function setupPageControls() {
     cameraRotateInput.addEventListener('change', function() {
       settings.cameraRotate = cameraRotateInput.checked;
     });
+  }
+
+  const screenshotBtn = document.getElementById('screenshot-btn');
+  if (screenshotBtn) {
+    screenshotBtn.addEventListener('click', takeScreenshot);
   }
 
 }
