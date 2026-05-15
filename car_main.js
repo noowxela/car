@@ -1621,9 +1621,16 @@ function setupGui() {
 
       });
 
+      folder.close();
+
     }
 
+    folder.close();
+
   }
+
+  panel.close();
+
 }
 
 function updateMaterials() {
