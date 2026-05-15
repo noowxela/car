@@ -162,9 +162,7 @@ export class CarDrive {
     this.centerOffset = options.centerOffset?.clone() ?? new THREE.Vector3();
 
     const box = new THREE.Box3().setFromObject(carModel);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    this.groundY = this.floorY + size.y * 0.02;
+    this.groundY = this.floorY + (carModel.position.y - box.min.y);
 
     this.wheels = {
       fl: options.wheels?.fl ?? carModel.getObjectByName('wheel_fl'),
@@ -319,5 +317,21 @@ export class CarDrive {
     }
     return target;
 
+  }
+
+  getTravelWorldPosition(target) {
+
+    const s = this.unitScale;
+    if (this.visualTreadmill) {
+      target.set(this.props.pos.x * s, this.groundY, -this.props.pos.y * s);
+    } else {
+      target.copy(this.carModel.position);
+    }
+    return target;
+
+  }
+
+  getSpeedKmh() {
+    return this.props.speed * 3.6;
   }
 }

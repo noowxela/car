@@ -163,8 +163,10 @@
             top: 16px;
             right: 16px;
             z-index: 90;
-            width: 88px;
-            height: 88px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
             pointer-events: none;
             user-select: none;
         }
@@ -175,8 +177,8 @@
 
         #compass .compass-dial {
             position: relative;
-            width: 100%;
-            height: 100%;
+            width: 88px;
+            height: 88px;
             border-radius: 50%;
             border: 1px solid rgba(255, 255, 255, 0.35);
             background: rgba(0, 0, 0, 0.45);
@@ -227,6 +229,38 @@
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.7);
         }
+
+        #compass .drive-location {
+            min-width: 118px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(0, 0, 0, 0.45);
+            font-size: 0.68rem;
+            line-height: 1.45;
+            color: rgba(255, 255, 255, 0.92);
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        #compass .drive-location .drive-loc-heading {
+            margin-top: 5px;
+            font-size: 0.58rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        #compass .drive-location .drive-loc-heading:first-child {
+            margin-top: 0;
+        }
+
+        #compass .drive-location .drive-loc-speed {
+            margin-top: 4px;
+            color: #f0c8a0;
+            font-weight: bold;
+        }
     </style>
     <script type="importmap">
         { "imports": { "three": "https://unpkg.com/three@v0.157.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@v0.157.0/examples/jsm/" } }
@@ -274,6 +308,24 @@
             <span class="compass-s">S</span>
             <span class="compass-w">W</span>
             <span class="compass-center"></span>
+        </div>
+        <div id="drive-location" class="drive-location" aria-live="polite">
+            <div class="drive-loc-heading">Car</div>
+            <div>X <span id="drive-loc-x">0</span></div>
+            <div>Y <span id="drive-loc-y">0</span></div>
+            <div>Z <span id="drive-loc-z">0</span></div>
+            <div class="drive-loc-heading">Ground</div>
+            <div>X <span id="ground-loc-x">0</span></div>
+            <div>Y <span id="ground-loc-y">0</span></div>
+            <div>Z <span id="ground-loc-z">0</span></div>
+            <div class="drive-loc-heading">Ripple</div>
+            <div>X <span id="ripple-loc-x">—</span></div>
+            <div>Z <span id="ripple-loc-z">—</span></div>
+            <div class="drive-loc-heading">Camera</div>
+            <div>X <span id="camera-loc-x">0</span></div>
+            <div>Y <span id="camera-loc-y">0</span></div>
+            <div>Z <span id="camera-loc-z">0</span></div>
+            <div class="drive-loc-speed"><span id="drive-loc-speed">0</span> km/h</div>
         </div>
     </div>
     <script type="module" src="./car_main.js"></script>

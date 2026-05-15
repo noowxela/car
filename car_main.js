@@ -98,6 +98,25 @@ const inspectState = {
 const driveLookAt = new THREE.Vector3();
 let compassEl;
 let compassDialEl;
+let driveLocXEl;
+let driveLocYEl;
+let driveLocZEl;
+let driveLocSpeedEl;
+let groundLocXEl;
+let groundLocYEl;
+let groundLocZEl;
+let rippleLocXEl;
+let rippleLocZEl;
+let cameraLocXEl;
+let cameraLocYEl;
+let cameraLocZEl;
+const driveTravelPos = new THREE.Vector3();
+const driveGroundLoc = {
+  root: new THREE.Vector3(),
+  scroll: new THREE.Vector2(),
+  ripple: new THREE.Vector2(),
+  rippleActive: false,
+};
 
 const PAINT_PRESETS = [
   { label: 'Rosely', value: 6 },
@@ -870,6 +889,47 @@ function updateCompass() {
 
 }
 
+function formatLoc(value) {
+  return Math.round(value).toLocaleString();
+}
+
+function updateDriveLocation() {
+
+  if (settings.appMode !== MODE.DRIVE || !carDrive) return;
+  if (!driveLocXEl || !driveLocYEl || !driveLocZEl || !driveLocSpeedEl) return;
+
+  carDrive.getTravelWorldPosition(driveTravelPos);
+  driveLocXEl.textContent = formatLoc(driveTravelPos.x);
+  driveLocYEl.textContent = formatLoc(driveTravelPos.y);
+  driveLocZEl.textContent = formatLoc(driveTravelPos.z);
+  driveLocSpeedEl.textContent = formatLoc(carDrive.getSpeedKmh());
+
+  if (cameraLocXEl && cameraLocYEl && cameraLocZEl) {
+    cameraLocXEl.textContent = formatLoc(camera.position.x);
+    cameraLocYEl.textContent = formatLoc(camera.position.y);
+    cameraLocZEl.textContent = formatLoc(camera.position.z);
+  }
+
+  const ground = driveEnvironment?.groundSystem;
+  if (!ground || !groundLocXEl || !groundLocYEl || !groundLocZEl) return;
+
+  ground.getLocationDisplay(driveGroundLoc);
+  groundLocXEl.textContent = formatLoc(driveGroundLoc.scroll.x);
+  groundLocYEl.textContent = formatLoc(driveGroundLoc.root.y);
+  groundLocZEl.textContent = formatLoc(driveGroundLoc.scroll.y);
+
+  if (!rippleLocXEl || !rippleLocZEl) return;
+
+  if (driveGroundLoc.rippleActive) {
+    rippleLocXEl.textContent = formatLoc(driveGroundLoc.ripple.x);
+    rippleLocZEl.textContent = formatLoc(driveGroundLoc.ripple.y);
+  } else {
+    rippleLocXEl.textContent = '—';
+    rippleLocZEl.textContent = '—';
+  }
+
+}
+
 function setCompassVisible(visible) {
 
   if (!compassEl) return;
@@ -983,6 +1043,7 @@ function render() {
     carDrive.update(delta);
     updateDriveCamera();
     updateCompass();
+    updateDriveLocation();
 
     if (driveEnvironment?.groundSystem) {
       carDrive.getDriveForwardXZ(driveForwardXZ);
@@ -1678,6 +1739,18 @@ function setupPageControls() {
 
   compassEl = document.getElementById('compass');
   compassDialEl = compassEl?.querySelector('.compass-dial') ?? null;
+  driveLocXEl = document.getElementById('drive-loc-x');
+  driveLocYEl = document.getElementById('drive-loc-y');
+  driveLocZEl = document.getElementById('drive-loc-z');
+  driveLocSpeedEl = document.getElementById('drive-loc-speed');
+  groundLocXEl = document.getElementById('ground-loc-x');
+  groundLocYEl = document.getElementById('ground-loc-y');
+  groundLocZEl = document.getElementById('ground-loc-z');
+  rippleLocXEl = document.getElementById('ripple-loc-x');
+  rippleLocZEl = document.getElementById('ripple-loc-z');
+  cameraLocXEl = document.getElementById('camera-loc-x');
+  cameraLocYEl = document.getElementById('camera-loc-y');
+  cameraLocZEl = document.getElementById('camera-loc-z');
 
   const paintPresetSelect = document.getElementById('paint-preset');
   if (paintPresetSelect) {

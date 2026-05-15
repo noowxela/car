@@ -30,7 +30,7 @@ void main() {
   newPos.xz -= origin;
   newPos.x = (fract((newPos.x + RANGE) / RANGE2) * RANGE2) - RANGE;
   newPos.z = (fract((newPos.z + RANGE) / RANGE2) * RANGE2) - RANGE;
-  newPos.y = fluctuation * waveAmp;
+  newPos.y = 0.0;
 
   float size = 0.42;
 
@@ -101,6 +101,9 @@ export class DriveGround {
     this.root.name = 'driveGround';
 
     this.ripplePos = new THREE.Vector2();
+    this.scrollWorld = new THREE.Vector2();
+    this.rippleWorld = new THREE.Vector2();
+    this.rippleActive = false;
     this.rippleGen = new RippleGen(renderer, this.ripplePos, this.GRID_SIZE, this.metrics.rippleSize);
 
     this.ledSprite = createLedTexture();
@@ -257,7 +260,9 @@ export class DriveGround {
       this.root.position.y = groundY;
     }
 
-    this.gridMaterial.uniforms.origin.value.set(px * s, py * s);
+    const origin = this.gridMaterial.uniforms.origin.value;
+    origin.set(px * s, py * s);
+    this.scrollWorld.set(origin.x, -origin.y);
 
     const moving = props.frameDist > 0.0001 || props.speed > 0.02;
     let tex;
@@ -288,6 +293,8 @@ export class DriveGround {
       this.rippleGen.setRippleSize(this.metrics.rippleSize * (0.85 + speedRatio * 0.4));
       this.rippleGen.newRippleImpact(impact);
       this.moveRippleOrigin(rippleX, rippleY);
+      this.rippleWorld.set(rippleX * s, -rippleY * s);
+      this.rippleActive = true;
 
       tex = this.rippleGen.update();
       tex = this.rippleGen.update();
@@ -295,11 +302,22 @@ export class DriveGround {
         tex = this.rippleGen.update();
       }
     } else {
+      this.rippleActive = false;
       tex = this.rippleGen.update();
     }
 
     this.gridMaterial.uniforms.heightmap.value = tex;
     this.moveRippleOrigin(1000, 1000);
+
+  }
+
+  getLocationDisplay(target) {
+
+    target.root.copy(this.root.position);
+    target.scroll.copy(this.scrollWorld);
+    target.ripple.copy(this.rippleWorld);
+    target.rippleActive = this.rippleActive;
+    return target;
 
   }
 
