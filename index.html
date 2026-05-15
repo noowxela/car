@@ -54,6 +54,60 @@
             color: white;
             font-size: 2rem;
         }
+
+        #page-controls {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.55);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            font-family: Monospace, monospace;
+            font-size: 0.9rem;
+            color: #fff;
+            user-select: none;
+        }
+
+        #page-controls label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        #page-controls input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+
+        #page-controls select {
+            font-family: Monospace, monospace;
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #page-controls .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #page-controls .control-group label {
+            cursor: default;
+        }
     </style>
     <script type="importmap">
         { "imports": { "three": "https://unpkg.com/three@v0.157.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@v0.157.0/examples/jsm/" } }
@@ -71,6 +125,17 @@
             <span id="progress-bar-value"></span>
         </label>
         <progress id="progress-bar" value="0" max="100"></progress>
+    </div>
+
+    <div id="page-controls">
+        <div class="control-group">
+            <label for="paint-preset">Paint preset</label>
+            <select id="paint-preset" aria-label="Paint preset"></select>
+        </div>
+        <label for="camera-rotate">
+            <input type="checkbox" id="camera-rotate" />
+            Rotate car
+        </label>
     </div>
     <script type="module" src="./car_main.js"></script>
 </body>

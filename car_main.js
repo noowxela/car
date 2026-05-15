@@ -54,6 +54,17 @@ var settings = {
 
 var carModel, materialsLib;
 var envMap_01;
+var carEnvironment;
+
+const STUDIO_FLOOR_Y = -57;
+
+const PAINT_PRESETS = [
+  { label: 'Rosely', value: 6 },
+  { label: 'Red 02', value: 7 },
+  { label: 'Red 03', value: 8 },
+  { label: 'Red 001', value: 9 },
+  { label: 'White', value: 20 },
+];
 
 // var car = new THREE.Car();
 // car.turningRadius = 75;
@@ -93,6 +104,7 @@ var carParts = {
 
 var clock = new THREE.Clock();
 var stats;
+var carRotationAngle = 0;
 
 init();
 animate();
@@ -111,6 +123,8 @@ function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
 
   const environment = new RoomEnvironment(renderer);
@@ -119,8 +133,16 @@ function init() {
 
   // // SCENE
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xbbbbbb);
+  scene.background = new THREE.Color(0xd4c8b8);
   scene.environment = pmremGenerator.fromScene(environment).texture;
+  envMap_01 = scene.environment;
+  pmremGenerator.dispose();
+  environment.dispose();
+
+  carEnvironment = initCarEnvironment(scene);
+  scene.add(carEnvironment);
+
+  renderer.toneMappingExposure = 1.05;
 
 
   // CAMERA
@@ -129,10 +151,18 @@ function init() {
 
   // CONTROLS
   cameraControls = new OrbitControls(camera, renderer.domElement);
+  cameraControls.target.set(0, STUDIO_FLOOR_Y + 30, 0);
+  cameraControls.enableDamping = true;
+  cameraControls.dampingFactor = 0.06;
+  cameraControls.minDistance = 200;
+  cameraControls.maxDistance = 1400;
+  cameraControls.maxPolarAngle = Math.PI * 0.49;
+  cameraControls.update();
 
 
   initMaterials();
   setupGui();
+  setupPageControls();
 
   const loadingManager = new THREE.LoadingManager();
 
@@ -172,6 +202,7 @@ function init() {
     });
     console.log("carModel : ", carModel)
     console.log("carModel.position : ", carModel.position)
+    carRotationAngle = carModel.rotation.y;
     scene.add(carModel);
 
 
@@ -478,6 +509,147 @@ function init() {
 
 }
 
+function initCarEnvironment(targetScene) {
+
+  const root = new THREE.Group();
+  root.name = 'carEnvironment';
+
+  const showroomCenterY = STUDIO_FLOOR_Y + 30;
+
+  targetScene.fog = new THREE.Fog(0xd4c8b8, 700, 3000);
+
+  const wallMat = new THREE.MeshStandardMaterial({
+    color: 0xddd2c4,
+    roughness: 0.92,
+    metalness: 0.01,
+    side: THREE.BackSide,
+  });
+
+  const room = new THREE.Mesh(
+    new THREE.CylinderGeometry(920, 920, 520, 80, 1, true),
+    wallMat
+  );
+  room.position.y = STUDIO_FLOOR_Y + 260;
+  room.receiveShadow = true;
+  root.add(room);
+
+  const ceiling = new THREE.Mesh(
+    new THREE.CircleGeometry(920, 80),
+    new THREE.MeshStandardMaterial({
+      color: 0xe8e0d6,
+      roughness: 0.95,
+      metalness: 0,
+    })
+  );
+  ceiling.rotation.x = -Math.PI / 2;
+  ceiling.position.y = STUDIO_FLOOR_Y + 520;
+  root.add(ceiling);
+
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(1800, 1800),
+    new THREE.MeshStandardMaterial({
+      color: 0xc9bfb0,
+      roughness: 0.28,
+      metalness: 0.18,
+    })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = STUDIO_FLOOR_Y;
+  floor.receiveShadow = true;
+  root.add(floor);
+
+  const turntable = new THREE.Mesh(
+    new THREE.CylinderGeometry(210, 210, 6, 80),
+    new THREE.MeshStandardMaterial({
+      color: 0x2a2620,
+      roughness: 0.3,
+      metalness: 0.75,
+    })
+  );
+  turntable.position.y = STUDIO_FLOOR_Y + 3;
+  turntable.castShadow = true;
+  turntable.receiveShadow = true;
+  root.add(turntable);
+
+  const windowMat = new THREE.MeshStandardMaterial({
+    color: 0xfff6e8,
+    emissive: 0xffc96a,
+    emissiveIntensity: 0.55,
+    roughness: 0.15,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.92,
+  });
+
+  const windowPositions = [-300, -120, 60, 240];
+  for (let i = 0; i < windowPositions.length; i++) {
+
+    const win = new THREE.Mesh(new THREE.PlaneGeometry(150, 300), windowMat);
+    win.position.set(windowPositions[i], STUDIO_FLOOR_Y + 230, 895);
+    win.rotation.y = Math.PI;
+    root.add(win);
+
+    const sill = new THREE.Mesh(
+      new THREE.BoxGeometry(155, 12, 24),
+      new THREE.MeshStandardMaterial({ color: 0xc4b8a8, roughness: 0.85, metalness: 0.02 })
+    );
+    sill.position.set(windowPositions[i], STUDIO_FLOOR_Y + 78, 882);
+    root.add(sill);
+
+  }
+
+  const sunLight = new THREE.DirectionalLight(0xffd9a0, 2.4);
+  sunLight.position.set(280, 580, 720);
+  sunLight.castShadow = true;
+  sunLight.shadow.mapSize.set(2048, 2048);
+  sunLight.shadow.bias = -0.00025;
+  sunLight.shadow.normalBias = 0.03;
+  const shadowCam = sunLight.shadow.camera;
+  shadowCam.near = 80;
+  shadowCam.far = 2000;
+  shadowCam.left = -480;
+  shadowCam.right = 480;
+  shadowCam.top = 480;
+  shadowCam.bottom = -480;
+  root.add(sunLight);
+  root.add(sunLight.target);
+  sunLight.target.position.set(0, showroomCenterY, 0);
+
+  const skyLight = new THREE.HemisphereLight(0x9ec8ef, 0xb8a090, 0.32);
+  root.add(skyLight);
+
+  const ambient = new THREE.AmbientLight(0xffe8d0, 0.08);
+  root.add(ambient);
+
+  const bounceLight = new THREE.DirectionalLight(0xffe8c8, 0.35);
+  bounceLight.position.set(-200, 120, 400);
+  root.add(bounceLight);
+
+  const fillLight = new THREE.DirectionalLight(0xa8c8e8, 0.18);
+  fillLight.position.set(-480, 200, -320);
+  root.add(fillLight);
+
+  const sunPatch = new THREE.Mesh(
+    new THREE.PlaneGeometry(520, 380),
+    new THREE.MeshStandardMaterial({
+      color: 0xffe0a8,
+      emissive: 0xffc060,
+      emissiveIntensity: 0.12,
+      roughness: 0.55,
+      metalness: 0.05,
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false,
+    })
+  );
+  sunPatch.rotation.x = -Math.PI / 2;
+  sunPatch.position.set(80, STUDIO_FLOOR_Y + 0.2, 120);
+  root.add(sunPatch);
+
+  return root;
+
+}
+
 function onWindowResize() {
 
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -499,20 +671,15 @@ function animate() {
 
 function render() {
 
-  renderer.render(scene, camera);
-  stats.update();
+  const delta = clock.getDelta();
 
-  if (settings.cameraRotate) {
-    const delta = clock.getDelta();
-
-    if (carModel !== undefined) {
-
-      carModel.rotation.y += delta * 0.5;
-
-    }
-
+  if (settings.cameraRotate && carModel !== undefined) {
+    carRotationAngle += delta * 0.5;
+    carModel.rotation.y = carRotationAngle;
   }
 
+  renderer.render(scene, camera);
+  stats.update();
 
 }
 
@@ -1111,6 +1278,33 @@ function initMaterials() {
   }
 }
 
+function setupPageControls() {
+
+  const paintPresetSelect = document.getElementById('paint-preset');
+  if (paintPresetSelect) {
+    for (const preset of PAINT_PRESETS) {
+      const option = document.createElement('option');
+      option.value = String(preset.value);
+      option.textContent = preset.label;
+      paintPresetSelect.appendChild(option);
+    }
+    paintPresetSelect.value = String(settings.body);
+    paintPresetSelect.addEventListener('change', function() {
+      settings.body = Number(paintPresetSelect.value);
+      updateMaterials();
+    });
+  }
+
+  const cameraRotateInput = document.getElementById('camera-rotate');
+  if (cameraRotateInput) {
+    cameraRotateInput.checked = settings.cameraRotate;
+    cameraRotateInput.addEventListener('change', function() {
+      settings.cameraRotate = cameraRotateInput.checked;
+    });
+  }
+
+}
+
 function setupGui() {
 
   var panel = new GUI();
@@ -1136,38 +1330,6 @@ function setupGui() {
   for (const folderName in folders) {
     const folder = panel.addFolder(folderName);
     if (folderName === 'Body') {
-      folder.add(settings, 'cameraRotate');
-
-      folder.add(settings, 'body', {
-          // 'Phong_orange': 0,
-          // "metallic": 1,
-          // "result_one": 2,
-          // "standby": 3,
-          // "client_red_1": 4,
-          // "client_red_2": 5,
-          "Rosely": 6,
-          "client_red_02": 7,
-          "client_red_03": 8,
-          "client_red_001": 9,
-          // "client_blue_1": 10,
-          // "client_blue_2": 11,
-          // "client_blue_3": 12,
-          // "bb": 13,
-          // "bbb": 14,
-          // "client_black_1": 15,
-          // "client_black_2": 16,
-          // "client_black_3": 17,
-          // "client_white_1": 18,
-          // "client_white_2": 19,
-          "client_white_3_ok": 20,
-          // "client_sliver_0": 21,
-          // "client_sliver_1": 22,
-          // "client_sliver_2": 23,
-          // "client_sliver_3": 24,
-          // "client_sliver_4": 25,
-          // "client_sliver_5": 26,
-        })
-        .onChange(updateMaterials)
 
       folder.addColor(settings, 'carbody').onChange(function(val) {
         console.log("onChange : ", val)
